@@ -134,7 +134,7 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "http://short.link/r/%s", shortURL)
+	fmt.Fprintf(w, "goby.lol/r/%s", shortURL)
 }
 
 func handleRedirect(w http.ResponseWriter, r *http.Request) {
