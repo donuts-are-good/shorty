@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Your Short Link</title>    
+    <title>Link Shortener</title>    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
     <style>
         html, body {
@@ -12,14 +12,26 @@
     </style>
 </head>
 <body>
-    <div class="container-full d-flex justify-content-center align-items-center" style="height: 100vh;">
-        <div class="row text-center">
-            <img src="https://github-production-user-asset-6210df.s3.amazonaws.com/96031819/260317630-6dc584a5-eaa5-442d-8afe-1f04238caab8.png" alt="" height="256px" width="256px" class="img-fluid mb-3">
-            <h2>Your Short Link:</h2>
-            <p id="short-link" class="mb-3"><a href="#">goby.lol/r/{{.ShortURL}}</a></p>
-            <a href="index.html" class="btn btn-outline-secondary">Create another link</a>
-        </div>
-    </div>
-    <a href="https://github.com/donuts-are-good/shorty" target="_blank"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/96031819/260317628-9ef5b0c3-82a5-48b3-8c88-e736d7abdd08.png" width="48px" height="48px" style="position:absolute;right:0.5em;bottom:0.5em;" alt=""></a>
+  <div class="container-full d-flex justify-content-center align-items-center" style="height: 100vh;">
+      <div class="row">
+          <div class="text-center">
+              <img src="https://github-production-user-asset-6210df.s3.amazonaws.com/96031819/260317630-6dc584a5-eaa5-442d-8afe-1f04238caab8.png" alt="" height="256px" width="256px" class="img-fluid">
+              <div class="input-group mt-3">
+                  <input type="url" id="url" value="http://goby.lol/{{ .ShortURL }}" placeholder="http://goby.lol/{{ .ShortURL }}" name="url" readonly class="form-control">
+                  <button type="button" onclick="copyURL()" class="btn btn-lg btn-outline-secondary">Copy!</button>
+              </div>
+          </div>
+      </div>
+  </div>
+  <a href="https://github.com/donuts-are-good/shorty" target="_blank"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/96031819/260317628-9ef5b0c3-82a5-48b3-8c88-e736d7abdd08.png" width="48px" height="48px" style="position:absolute;right:0.5em;bottom:0.5em;" alt=""></a>
+
+  <script>
+      function copyURL() {
+          var copyText = document.getElementById("url");
+          copyText.select();
+          document.execCommand("copy");
+          alert("Copied: " + copyText.value);  
+      }
+  </script>
 </body>
 </html>
