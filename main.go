@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"text/template"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -18,6 +19,7 @@ import (
 
 var db *sql.DB
 var visitCountCache = make(map[string]int)
+var shortTemplate *template.Template
 
 type Config struct {
 	Database struct {
@@ -88,6 +90,7 @@ func main() {
 			writeCacheToDB()
 		}
 	}()
+	shortTemplate = template.Must(template.New("short").ParseFiles("short.html"))
 
 	http.HandleFunc(cfg.Routes.Index, handleIndex)
 	http.HandleFunc(cfg.Routes.Create, handleCreate)
@@ -134,7 +137,15 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "goby.lol/r/%s", shortURL)
+	data := struct {
+		ShortURL string
+	}{
+		ShortURL: fmt.Sprintf("goby.lol/r/%s", shortURL),
+	}
+
+	if err := shortTemplate.Execute(w, data); err != nil {
+		log.Printf("Failed to render template: %v", err)
+	}
 }
 
 func handleRedirect(w http.ResponseWriter, r *http.Request) {
