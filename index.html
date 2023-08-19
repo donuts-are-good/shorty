@@ -6,37 +6,28 @@
     <title>goby.lol - Link Shortener</title>    
     
     <style>
-        html, body {
-            height: 100%; 
-        }
         .align-items-center {
   align-items: center !important;
+}
+.row {
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: calc(-1 * var(--bs-gutter-y));
+  margin-right: calc(-0.5 * var(--bs-gutter-x));
+  margin-left: calc(-0.5 * var(--bs-gutter-x));
 }
 .text-center {
   text-align: center !important;
 }
-.form-control {
-  display: block;
-  width: 100%;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--bs-body-color);
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-color: var(--bs-body-bg);
-  background-clip: padding-box;
-  border: var(--bs-border-width) solid var(--bs-border-color);
-  border-radius: var(--bs-border-radius);
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+.rounded {
+  border-radius: var(--bs-border-radius) !important;
 }
-.d-flex {
-  display: flex !important;
-}
-.justify-content-center {
-  justify-content: center !important;
+.btn {
+  pointer-events: none;
+  filter: none;
+  opacity: 0.65;
 }
 .btn-outline-secondary {
   --bs-btn-color: #6c757d;
@@ -54,34 +45,20 @@
   --bs-btn-disabled-border-color: #6c757d;
   --bs-gradient: none;
 }
-.img-fluid {
-  max-width: 100%;
-  height: auto;
+.d-flex {
+  display: flex !important;
 }
-.row {
-  --bs-gutter-x: 1.5rem;
-  --bs-gutter-y: 0;
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: calc(-1 * var(--bs-gutter-y));
-  margin-right: calc(-0.5 * var(--bs-gutter-x));
-  margin-left: calc(-0.5 * var(--bs-gutter-x));
+.justify-content-center {
+  justify-content: center !important;
 }
 .mb-3 {
   margin-bottom: 1rem !important;
 }
-.input-group {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  width: 100%;
+.img-fluid {
+  max-width: 100%;
+  height: auto;
 }
-.btn {
-  pointer-events: none;
-  filter: none;
-  opacity: 0.65;
-}
+
 
     </style>
 </head>
@@ -91,9 +68,10 @@
             <form action="/create" method="POST" class="text-center">
                 <div class="mb-3">
                     <img src="https://github-production-user-asset-6210df.s3.amazonaws.com/96031819/260317630-6dc584a5-eaa5-442d-8afe-1f04238caab8.png" alt="" height="256px" width="256px" class="img-fluid">
-                    <div class="input-group">
-                      <input type="url" id="url" placeholder="long-ass-url.com/something" name="url" required class="form-control">
-                      <button type="submit" class="btn btn-lg btn-outline-secondary">shorter!</button>
+                      <input type="url" id="url" class="rounded" placeholder="long-ass-url.com/something" name="url">
+                      <center>
+                        <button type="submit" class="btn btn-lg btn-outline-secondary rounded">shorter!</button>
+                      </center>
                     </div>
                 
             </form>
