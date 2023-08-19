@@ -99,13 +99,23 @@ func main() {
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling index request")
 	if r.URL.Path != "/" {
+		log.Println("Redirecting to root from:", r.URL.Path)
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	http.ServeFile(w, r, "index.html")
 }
+
 func handleCreate(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling create request")
+	if r.Method != http.MethodPost {
+		log.Println("Not a POST request, redirecting to index")
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
 	if r.Method != http.MethodPost {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
@@ -131,9 +141,11 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	shortURL, err := createShortURL(longURL)
 	if err != nil {
+		log.Printf("Error creating short URL: %v", err)
 		http.Error(w, "Failed to create short URL", http.StatusInternalServerError)
 		return
 	}
+	log.Println("Created short URL:", shortURL)
 
 	data := struct {
 		ShortURL string
@@ -154,12 +166,17 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRedirect(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling redirect request")
 	shortURL := strings.TrimPrefix(r.URL.Path, "/r/")
+	log.Println("Extracted short URL:", shortURL)
+
 	longURL, err := getLongURL(shortURL)
 	if err != nil {
+		log.Printf("Error fetching long URL for short URL %s: %v", shortURL, err)
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
+	log.Println("Redirecting to long URL:", longURL)
 
 	visitCountCache[shortURL]++
 
@@ -169,6 +186,7 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 func createShortURL(longURL string) (string, error) {
 	for {
 		shortURL := randomString(8)
+		log.Println("Generated random short URL:", shortURL)
 		exists, err := shortURLExists(shortURL)
 		if err != nil {
 			return "", err
@@ -176,15 +194,20 @@ func createShortURL(longURL string) (string, error) {
 		if !exists {
 			_, err := db.Exec(`INSERT INTO url_mapping (short_url, long_url) VALUES (?, ?)`, shortURL, longURL)
 			if err != nil {
+				log.Printf("Error inserting short URL %s into DB: %v", shortURL, err)
 				return "", err
 			}
+			log.Println("Successfully saved short URL to DB:", shortURL)
 			return shortURL, nil
 		}
 	}
 }
 
 func writeCacheToDB() {
+	log.Println("Writing cache to DB")
 	for shortURL, count := range visitCountCache {
+		log.Printf("Updating visit count for short URL %s by %d", shortURL, count)
+
 		_, err := db.Exec(`UPDATE url_mapping SET visit_count = visit_count + ? WHERE short_url = ?`, count, shortURL)
 		if err != nil {
 			log.Printf("Failed to update visit count: %v", err)
@@ -199,9 +222,10 @@ func getLongURL(shortURL string) (string, error) {
 	var longURL string
 	err := db.QueryRow(`SELECT long_url FROM url_mapping WHERE short_url = ?`, shortURL).Scan(&longURL)
 	if err != nil {
+		log.Printf("Error querying DB for short URL %s: %v", shortURL, err)
 		return "", err
 	}
-
+	log.Println("Fetched long URL from DB:", longURL)
 	return longURL, nil
 }
 
