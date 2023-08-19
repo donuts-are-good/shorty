@@ -3,63 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>goby.lol - Link Shortener</title>    
-    
+    <title>Link Shortener</title>    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
     <style>
-        .align-items-center {
-  align-items: center !important;
-}
-.row {
-  --bs-gutter-x: 1.5rem;
-  --bs-gutter-y: 0;
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: calc(-1 * var(--bs-gutter-y));
-  margin-right: calc(-0.5 * var(--bs-gutter-x));
-  margin-left: calc(-0.5 * var(--bs-gutter-x));
-}
-.text-center {
-  text-align: center !important;
-}
-.rounded {
-  border-radius: var(--bs-border-radius) !important;
-}
-.btn {
-  pointer-events: none;
-  filter: none;
-  opacity: 0.65;
-}
-.btn-outline-secondary {
-  --bs-btn-color: #6c757d;
-  --bs-btn-border-color: #6c757d;
-  --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #6c757d;
-  --bs-btn-hover-border-color: #6c757d;
-  --bs-btn-focus-shadow-rgb: 108, 117, 125;
-  --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #6c757d;
-  --bs-btn-active-border-color: #6c757d;
-  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
-  --bs-btn-disabled-color: #6c757d;
-  --bs-btn-disabled-bg: transparent;
-  --bs-btn-disabled-border-color: #6c757d;
-  --bs-gradient: none;
-}
-.d-flex {
-  display: flex !important;
-}
-.justify-content-center {
-  justify-content: center !important;
-}
-.mb-3 {
-  margin-bottom: 1rem !important;
-}
-.img-fluid {
-  max-width: 100%;
-  height: auto;
-}
-
-
+        html, body {
+            height: 100%; 
+        }
     </style>
 </head>
 <body>
@@ -68,10 +17,9 @@
             <form action="/create" method="POST" class="text-center">
                 <div class="mb-3">
                     <img src="https://github-production-user-asset-6210df.s3.amazonaws.com/96031819/260317630-6dc584a5-eaa5-442d-8afe-1f04238caab8.png" alt="" height="256px" width="256px" class="img-fluid">
-                      <input type="url" id="url" class="rounded" placeholder="long-ass-url.com/something" name="url">
-                      <center>
-                        <button type="submit" class="btn btn-lg btn-outline-secondary rounded">shorter!</button>
-                      </center>
+                    <div class="input-group">
+                      <input type="url" id="url" placeholder="long-ass-url.com/something" name="url" required class="form-control">
+                      <button type="submit" class="btn btn-lg btn-outline-secondary">shorter!</button>
                     </div>
                 
             </form>
