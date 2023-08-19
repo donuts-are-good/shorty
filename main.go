@@ -19,7 +19,6 @@ import (
 
 var db *sql.DB
 var visitCountCache = make(map[string]int)
-var shortTemplate *template.Template
 
 type Config struct {
 	Database struct {
@@ -42,6 +41,7 @@ type Config struct {
 var cfg Config
 
 func main() {
+
 	cfgFile, err := os.Open("shorty.config")
 	if err != nil {
 		log.Fatalf("Failed to open config file: %v", err)
@@ -90,7 +90,6 @@ func main() {
 			writeCacheToDB()
 		}
 	}()
-	shortTemplate = template.Must(template.New("short").ParseFiles("short.html"))
 
 	http.HandleFunc(cfg.Routes.Index, handleIndex)
 	http.HandleFunc(cfg.Routes.Create, handleCreate)
@@ -106,7 +105,6 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	http.ServeFile(w, r, "index.html")
 }
-
 func handleCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -140,11 +138,18 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		ShortURL string
 	}{
-		ShortURL: fmt.Sprintf("goby.lol/r/%s", shortURL),
+		ShortURL: shortURL,
 	}
 
-	if err := shortTemplate.Execute(w, data); err != nil {
+	tmpl, err := template.ParseFiles("short.html")
+	if err != nil {
+		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		log.Printf("Failed to render template: %v", err)
+		http.Error(w, "Error rendering template", http.StatusInternalServerError)
 	}
 }
 
