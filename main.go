@@ -167,7 +167,7 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 
 func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling redirect request")
-	shortURL := strings.TrimPrefix(r.URL.Path, "/#/")
+	shortURL := strings.TrimPrefix(r.URL.Path, "/_/")
 	log.Println("Extracted short URL:", shortURL)
 
 	longURL, err := getLongURL(shortURL)
