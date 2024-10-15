@@ -195,21 +195,41 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	shortURL := strings.TrimPrefix(r.URL.Path, "/r/")
 	log.Println("Extracted short URL:", shortURL)
 
-	longURL, err := getLongURL(shortURL)
-	if err != nil {
-		log.Printf("Error fetching long URL for short URL %s: %v", shortURL, err)
+	if shortURL == "" {
+		log.Println("Empty short URL, redirecting to root")
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
-	log.Println("Redirecting to long URL:", longURL)
 
-	// Update visit count directly in the database
-	_, err = db.Exec(`UPDATE url_mapping SET visit_count = visit_count + 1 WHERE short_url = ?`, shortURL)
+	longURL, err := getLongURL(shortURL)
 	if err != nil {
-		log.Printf("Error updating visit count for short URL %s: %v", shortURL, err)
-		// Continue with the redirect even if the update fails
+		if err == sql.ErrNoRows {
+			log.Printf("No long URL found for short URL %s", shortURL)
+		} else {
+			log.Printf("Error fetching long URL for short URL %s: %v", shortURL, err)
+		}
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
 	}
 
+	if longURL == "" {
+		log.Printf("Empty long URL for short URL %s", shortURL)
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
+	log.Printf("Found long URL for %s: %s", shortURL, longURL)
+
+	// Update visit count directly in the database
+	result, err := db.Exec(`UPDATE url_mapping SET visit_count = visit_count + 1 WHERE short_url = ?`, shortURL)
+	if err != nil {
+		log.Printf("Error updating visit count for short URL %s: %v", shortURL, err)
+	} else {
+		rowsAffected, _ := result.RowsAffected()
+		log.Printf("Updated visit count for %s, rows affected: %d", shortURL, rowsAffected)
+	}
+
+	log.Printf("Redirecting to long URL: %s", longURL)
 	http.Redirect(w, r, longURL, http.StatusFound)
 }
 
