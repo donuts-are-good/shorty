@@ -86,10 +86,10 @@ func main() {
 		fmt.Printf("Database loaded with %d links.\n", count)
 	}
 
-	http.HandleFunc(cfg.Routes.Index, handleIndex)
-	http.HandleFunc(cfg.Routes.Create, handleCreate)
-	http.HandleFunc(cfg.Routes.Redirect, handleRedirect)
-	http.HandleFunc(cfg.Routes.Stats, handleStats)
+	http.HandleFunc("/", handleIndex)
+	http.HandleFunc("/create", handleCreate)
+	http.HandleFunc("/r/", handleRedirect)
+	http.HandleFunc("/stats", handleStats)
 
 	log.Fatal(http.ListenAndServe(cfg.Server.Port, nil))
 }
@@ -163,7 +163,7 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 
 func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling redirect request")
-	shortURL := strings.TrimPrefix(r.URL.Path, "/_/")
+	shortURL := strings.TrimPrefix(r.URL.Path, "/r/")
 	log.Println("Extracted short URL:", shortURL)
 
 	longURL, err := getLongURL(shortURL)
