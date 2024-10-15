@@ -299,6 +299,10 @@ type LinkStats struct {
 	CreatedAt  time.Time
 }
 
+func (l LinkStats) FormattedCreatedAt() string {
+	return l.CreatedAt.Format("2006-01-02 15:04:05")
+}
+
 type Stats struct {
 	TotalLinks       int
 	TotalClicks      int
@@ -342,9 +346,15 @@ func getStats() (Stats, error) {
 	var allLinks []LinkStats
 	for rows.Next() {
 		var link LinkStats
-		err := rows.Scan(&link.ShortURL, &link.LongURL, &link.VisitCount, &link.CreatedAt)
+		var createdAtStr string
+		err := rows.Scan(&link.ShortURL, &link.LongURL, &link.VisitCount, &createdAtStr)
 		if err != nil {
 			return stats, err
+		}
+		// Parse the created_at string into a time.Time object
+		link.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAtStr)
+		if err != nil {
+			return stats, fmt.Errorf("error parsing created_at time: %v", err)
 		}
 		allLinks = append(allLinks, link)
 	}
