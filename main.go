@@ -193,7 +193,7 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling redirect request")
 	shortURL := strings.TrimPrefix(r.URL.Path, "/r/")
-	log.Println("Extracted short URL:", shortURL)
+	log.Printf("Extracted short URL: '%s'", shortURL)
 
 	if shortURL == "" {
 		log.Println("Empty short URL, redirecting to root")
@@ -204,32 +204,34 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	longURL, err := getLongURL(shortURL)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("No long URL found for short URL %s", shortURL)
+			log.Printf("No long URL found for short URL '%s'", shortURL)
 		} else {
-			log.Printf("Error fetching long URL for short URL %s: %v", shortURL, err)
+			log.Printf("Error fetching long URL for short URL '%s': %v", shortURL, err)
 		}
+		log.Println("Redirecting to root due to error")
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
 	if longURL == "" {
-		log.Printf("Empty long URL for short URL %s", shortURL)
+		log.Printf("Empty long URL for short URL '%s'", shortURL)
+		log.Println("Redirecting to root due to empty long URL")
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
-	log.Printf("Found long URL for %s: %s", shortURL, longURL)
+	log.Printf("Found long URL for '%s': '%s'", shortURL, longURL)
 
 	// Update visit count directly in the database
 	result, err := db.Exec(`UPDATE url_mapping SET visit_count = visit_count + 1 WHERE short_url = ?`, shortURL)
 	if err != nil {
-		log.Printf("Error updating visit count for short URL %s: %v", shortURL, err)
+		log.Printf("Error updating visit count for short URL '%s': %v", shortURL, err)
 	} else {
 		rowsAffected, _ := result.RowsAffected()
-		log.Printf("Updated visit count for %s, rows affected: %d", shortURL, rowsAffected)
+		log.Printf("Updated visit count for '%s', rows affected: %d", shortURL, rowsAffected)
 	}
 
-	log.Printf("Redirecting to long URL: %s", longURL)
+	log.Printf("Redirecting to long URL: '%s'", longURL)
 	http.Redirect(w, r, longURL, http.StatusFound)
 }
 
@@ -262,7 +264,7 @@ func createShortURL(longURL string) (string, error) {
 	err := db.QueryRow(`SELECT short_url FROM url_mapping WHERE long_url = ? ORDER BY rowid ASC LIMIT 1`, longURL).Scan(&existingShortURL)
 	if err == nil {
 		// If we found an existing short URL, return it
-		log.Printf("Found existing short URL %s for long URL %s", existingShortURL, longURL)
+		log.Printf("Found existing short URL '%s' for long URL '%s'", existingShortURL, longURL)
 		return existingShortURL, nil
 	} else if err != sql.ErrNoRows {
 		// If there was an error other than "no rows", return it
@@ -273,18 +275,19 @@ func createShortURL(longURL string) (string, error) {
 	// If we didn't find an existing short URL, create a new one
 	for {
 		shortURL := randomString(cfg.ShortURL.Length)
-		log.Println("Generated random short URL:", shortURL)
+		log.Printf("Generated random short URL: '%s'", shortURL)
 		exists, err := shortURLExists(shortURL)
 		if err != nil {
+			log.Printf("Error checking if short URL exists: %v", err)
 			return "", err
 		}
 		if !exists {
 			_, err := db.Exec(`INSERT INTO url_mapping (short_url, long_url, created_at) VALUES (?, ?, datetime('now'))`, shortURL, longURL)
 			if err != nil {
-				log.Printf("Error inserting short URL %s into DB: %v", shortURL, err)
+				log.Printf("Error inserting short URL '%s' into DB: %v", shortURL, err)
 				return "", err
 			}
-			log.Println("Successfully saved short URL to DB:", shortURL)
+			log.Printf("Successfully saved short URL to DB: '%s' -> '%s'", shortURL, longURL)
 			return shortURL, nil
 		}
 	}
@@ -294,10 +297,14 @@ func getLongURL(shortURL string) (string, error) {
 	var longURL string
 	err := db.QueryRow(`SELECT long_url FROM url_mapping WHERE short_url = ?`, shortURL).Scan(&longURL)
 	if err != nil {
-		log.Printf("Error querying DB for short URL %s: %v", shortURL, err)
+		if err == sql.ErrNoRows {
+			log.Printf("No long URL found in DB for short URL '%s'", shortURL)
+		} else {
+			log.Printf("Error querying DB for short URL '%s': %v", shortURL, err)
+		}
 		return "", err
 	}
-	log.Println("Fetched long URL from DB:", longURL)
+	log.Printf("Fetched long URL from DB for '%s': '%s'", shortURL, longURL)
 	return longURL, nil
 }
 
