@@ -109,8 +109,8 @@ func main() {
 
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/create", handleCreate)
-	http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
-		path := strings.TrimPrefix(r.URL.Path, "/r/")
+	http.HandleFunc("/_/", func(w http.ResponseWriter, r *http.Request) {
+		path := strings.TrimPrefix(r.URL.Path, "/_/")
 		if strings.HasSuffix(path, "/stats") {
 			shortURL := strings.TrimSuffix(path, "/stats")
 			handleLinkStats(w, r, shortURL)
@@ -192,7 +192,7 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 
 func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	log.Println("Handling redirect request")
-	shortURL := strings.TrimPrefix(r.URL.Path, "/r/")
+	shortURL := strings.TrimPrefix(r.URL.Path, "/_/")
 	log.Printf("Extracted short URL: '%s'", shortURL)
 
 	if shortURL == "" {

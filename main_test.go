@@ -123,7 +123,7 @@ func TestHandleRedirect(t *testing.T) {
 			WithArgs(shortURL).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		req, err := http.NewRequest("GET", "/r/"+shortURL, nil)
+		req, err := http.NewRequest("GET", "/_/"+shortURL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -149,7 +149,7 @@ func TestHandleRedirect(t *testing.T) {
 			WithArgs(shortURL).
 			WillReturnError(sql.ErrNoRows)
 
-		req, err := http.NewRequest("GET", "/r/"+shortURL, nil)
+		req, err := http.NewRequest("GET", "/_/"+shortURL, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

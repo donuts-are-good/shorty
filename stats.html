@@ -31,7 +31,7 @@
         </tr>
         {{range .PopularLinks}}
         <tr>
-            <td><a href="/r/{{.ShortURL}}">{{.ShortURL}}</a></td>
+            <td><a href="/_/{{.ShortURL}}">{{.ShortURL}}</a></td>
             <td class="long-url"><a href="{{.LongURL}}" title="{{.LongURL}}">{{.LongURL}}</a></td>
             <td>{{.VisitCount}}</td>
             <td>{{.FormattedCreatedAt}}</td>
@@ -49,7 +49,7 @@
         </tr>
         {{range .RecentLinks}}
         <tr>
-            <td><a href="/r/{{.ShortURL}}">{{.ShortURL}}</a></td>
+            <td><a href="/_/{{.ShortURL}}">{{.ShortURL}}</a></td>
             <td class="long-url"><a href="{{.LongURL}}" title="{{.LongURL}}">{{.LongURL}}</a></td>
             <td>{{.VisitCount}}</td>
             <td>{{.FormattedCreatedAt}}</td>
@@ -67,7 +67,7 @@
         </tr>
         {{range .MostClickedLinks}}
         <tr>
-            <td><a href="/r/{{.ShortURL}}">{{.ShortURL}}</a></td>
+            <td><a href="/_/{{.ShortURL}}">{{.ShortURL}}</a></td>
             <td class="long-url"><a href="{{.LongURL}}" title="{{.LongURL}}">{{.LongURL}}</a></td>
             <td>{{.VisitCount}}</td>
             <td>{{.FormattedCreatedAt}}</td>

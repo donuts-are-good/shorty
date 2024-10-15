@@ -47,7 +47,7 @@ Example configuration:
   "routes": {
     "index": "/",
     "create": "/create",
-    "redirect": "/r/"
+    "redirect": "/_/"
   },
   "shortURL": {
     "length": 8,
