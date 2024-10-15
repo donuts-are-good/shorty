@@ -78,6 +78,22 @@ func main() {
 		}
 		fmt.Println("Database initialized.")
 	} else {
+		// Check if the created_at column exists
+		var columnExists bool
+		err = db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('url_mapping') WHERE name='created_at'`).Scan(&columnExists)
+		if err != nil {
+			log.Fatalf("Failed to check for created_at column: %v", err)
+		}
+
+		// Add the created_at column if it doesn't exist
+		if !columnExists {
+			_, err = db.Exec(`ALTER TABLE url_mapping ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP`)
+			if err != nil {
+				log.Fatalf("Failed to add created_at column: %v", err)
+			}
+			fmt.Println("Added created_at column to existing database.")
+		}
+
 		var count int
 		err = db.QueryRow(`SELECT COUNT(*) FROM url_mapping`).Scan(&count)
 		if err != nil {
