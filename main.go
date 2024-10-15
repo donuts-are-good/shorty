@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -31,6 +32,7 @@ type Config struct {
 		Index    string `json:"index"`
 		Create   string `json:"create"`
 		Redirect string `json:"redirect"`
+		Stats    string `json:"stats"`
 	} `json:"routes"`
 	ShortURL struct {
 		Length  int    `json:"length"`
@@ -69,7 +71,8 @@ func main() {
 		_, err = db.Exec(`CREATE TABLE url_mapping (
 			short_url TEXT PRIMARY KEY,
 			long_url TEXT NOT NULL,
-			visit_count INTEGER DEFAULT 0
+			visit_count INTEGER DEFAULT 0,
+			created_at TEXT DEFAULT CURRENT_TIMESTAMP
 		)`)
 		if err != nil {
 			log.Fatalf("Failed to create table: %v", err)
@@ -94,6 +97,7 @@ func main() {
 	http.HandleFunc(cfg.Routes.Index, handleIndex)
 	http.HandleFunc(cfg.Routes.Create, handleCreate)
 	http.HandleFunc(cfg.Routes.Redirect, handleRedirect)
+	http.HandleFunc(cfg.Routes.Stats, handleStats)
 
 	log.Fatal(http.ListenAndServe(cfg.Server.Port, nil))
 }
@@ -178,21 +182,63 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("Redirecting to long URL:", longURL)
 
-	visitCountCache[shortURL]++
+	// Update visit count directly in the database
+	_, err = db.Exec(`UPDATE url_mapping SET visit_count = visit_count + 1 WHERE short_url = ?`, shortURL)
+	if err != nil {
+		log.Printf("Error updating visit count for short URL %s: %v", shortURL, err)
+		// Continue with the redirect even if the update fails
+	}
 
 	http.Redirect(w, r, longURL, http.StatusFound)
 }
 
+func handleStats(w http.ResponseWriter, r *http.Request) {
+	log.Println("Handling stats request")
+
+	stats, err := getStats()
+	if err != nil {
+		log.Printf("Error fetching stats: %v", err)
+		http.Error(w, "Error fetching stats", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl, err := template.ParseFiles("stats.html")
+	if err != nil {
+		log.Printf("Error parsing stats template: %v", err)
+		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, stats); err != nil {
+		log.Printf("Error executing stats template: %v", err)
+		http.Error(w, "Error rendering template", http.StatusInternalServerError)
+	}
+}
+
 func createShortURL(longURL string) (string, error) {
+	// First, check if the long URL already exists
+	var existingShortURL string
+	err := db.QueryRow(`SELECT short_url FROM url_mapping WHERE long_url = ? ORDER BY rowid ASC LIMIT 1`, longURL).Scan(&existingShortURL)
+	if err == nil {
+		// If we found an existing short URL, return it
+		log.Printf("Found existing short URL %s for long URL %s", existingShortURL, longURL)
+		return existingShortURL, nil
+	} else if err != sql.ErrNoRows {
+		// If there was an error other than "no rows", return it
+		log.Printf("Error checking for existing long URL: %v", err)
+		return "", err
+	}
+
+	// If we didn't find an existing short URL, create a new one
 	for {
-		shortURL := randomString(8)
+		shortURL := randomString(cfg.ShortURL.Length)
 		log.Println("Generated random short URL:", shortURL)
 		exists, err := shortURLExists(shortURL)
 		if err != nil {
 			return "", err
 		}
 		if !exists {
-			_, err := db.Exec(`INSERT INTO url_mapping (short_url, long_url) VALUES (?, ?)`, shortURL, longURL)
+			_, err := db.Exec(`INSERT INTO url_mapping (short_url, long_url, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)`, shortURL, longURL)
 			if err != nil {
 				log.Printf("Error inserting short URL %s into DB: %v", shortURL, err)
 				return "", err
@@ -245,4 +291,86 @@ func randomString(length int) string {
 		b[i] = cfg.ShortURL.Charset[b[i]%byte(len(cfg.ShortURL.Charset))]
 	}
 	return string(b)
+}
+
+// Add these new types to support the stats
+type LinkStats struct {
+	ShortURL   string
+	LongURL    string
+	VisitCount int
+	CreatedAt  time.Time
+}
+
+type Stats struct {
+	TotalLinks       int
+	TotalClicks      int
+	ClicksToday      int
+	PopularLinks     []LinkStats
+	RecentLinks      []LinkStats
+	MostClickedLinks []LinkStats
+}
+
+// Add the getStats function
+func getStats() (Stats, error) {
+	var stats Stats
+	var err error
+
+	// Get total links
+	err = db.QueryRow("SELECT COUNT(*) FROM url_mapping").Scan(&stats.TotalLinks)
+	if err != nil {
+		return stats, err
+	}
+
+	// Get total clicks
+	err = db.QueryRow("SELECT SUM(visit_count) FROM url_mapping").Scan(&stats.TotalClicks)
+	if err != nil {
+		return stats, err
+	}
+
+	// Get clicks today
+	today := time.Now().Format("2006-01-02")
+	err = db.QueryRow("SELECT COALESCE(SUM(visit_count), 0) FROM url_mapping WHERE DATE(created_at) = ?", today).Scan(&stats.ClicksToday)
+	if err != nil {
+		return stats, err
+	}
+
+	// Get popular, recent, and most clicked links
+	rows, err := db.Query("SELECT short_url, long_url, visit_count, created_at FROM url_mapping ORDER BY created_at DESC")
+	if err != nil {
+		return stats, err
+	}
+	defer rows.Close()
+
+	var allLinks []LinkStats
+	for rows.Next() {
+		var link LinkStats
+		err := rows.Scan(&link.ShortURL, &link.LongURL, &link.VisitCount, &link.CreatedAt)
+		if err != nil {
+			return stats, err
+		}
+		allLinks = append(allLinks, link)
+	}
+
+	// Sort and slice for different categories
+	sort.Slice(allLinks, func(i, j int) bool {
+		return allLinks[i].VisitCount > allLinks[j].VisitCount
+	})
+	stats.PopularLinks = allLinks[:min(10, len(allLinks))]
+
+	sort.Slice(allLinks, func(i, j int) bool {
+		return allLinks[i].CreatedAt.After(allLinks[j].CreatedAt)
+	})
+	stats.RecentLinks = allLinks[:min(10, len(allLinks))]
+
+	stats.MostClickedLinks = stats.PopularLinks // They are the same in this case
+
+	return stats, nil
+}
+
+// Helper function for slicing
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

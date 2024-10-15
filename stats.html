@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener Stats</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+        h1, h2 { color: #333; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>URL Shortener Statistics</h1>
+    
+    <h2>Overview</h2>
+    <p>Total Links: {{.TotalLinks}}</p>
+    <p>Total Clicks: {{.TotalClicks}}</p>
+    <p>Clicks Today: {{.ClicksToday}}</p>
+    
+    <h2>Popular Links</h2>
+    <table>
+        <tr>
+            <th>Short URL</th>
+            <th>Long URL</th>
+            <th>Visits</th>
+            <th>Created At</th>
+        </tr>
+        {{range .PopularLinks}}
+        <tr>
+            <td>{{.ShortURL}}</td>
+            <td>{{.LongURL}}</td>
+            <td>{{.VisitCount}}</td>
+            <td>{{.CreatedAt}}</td>
+        </tr>
+        {{end}}
+    </table>
+    
+    <h2>Recent Links</h2>
+    <table>
+        <tr>
+            <th>Short URL</th>
+            <th>Long URL</th>
+            <th>Visits</th>
+            <th>Created At</th>
+        </tr>
+        {{range .RecentLinks}}
+        <tr>
+            <td>{{.ShortURL}}</td>
+            <td>{{.LongURL}}</td>
+            <td>{{.VisitCount}}</td>
+            <td>{{.CreatedAt}}</td>
+        </tr>
+        {{end}}
+    </table>
+    
+    <h2>Most Clicked Links</h2>
+    <table>
+        <tr>
+            <th>Short URL</th>
+            <th>Long URL</th>
+            <th>Visits</th>
+            <th>Created At</th>
+        </tr>
+        {{range .MostClickedLinks}}
+        <tr>
+            <td>{{.ShortURL}}</td>
+            <td>{{.LongURL}}</td>
+            <td>{{.VisitCount}}</td>
+            <td>{{.CreatedAt}}</td>
+        </tr>
+        {{end}}
+    </table>
+</body>
+</html>
