@@ -78,15 +78,16 @@
     <script>
         function truncateUrl(url, maxLength) {
             if (url.length <= maxLength) return url;
-            const half = Math.floor(maxLength / 2);
-            return url.substr(0, half) + '...' + url.substr(url.length - half);
+            const firstPart = url.substr(0, 20);
+            const lastPart = url.substr(-20);
+            return firstPart + '...' + lastPart;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             const longUrls = document.querySelectorAll('.long-url a');
             longUrls.forEach(function(element) {
                 const fullUrl = element.textContent;
-                element.textContent = truncateUrl(fullUrl, 40);
+                element.textContent = truncateUrl(fullUrl, 50);
                 element.title = fullUrl; // Keep the full URL in the title attribute for hover
             });
         });
