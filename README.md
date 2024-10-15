@@ -98,3 +98,5 @@ Shorty is released under the MIT License. See the [LICENSE](LICENSE) file for de
 ## Live Instance
 
 A running instance of Shorty is available at [https://goby.lol](https://goby.lol).
+
+

@@ -324,7 +324,7 @@ func getStats() (Stats, error) {
 	}
 
 	// Get total clicks
-	err = db.QueryRow("SELECT SUM(visit_count) FROM url_mapping").Scan(&stats.TotalClicks)
+	err = db.QueryRow("SELECT COALESCE(SUM(visit_count), 0) FROM url_mapping").Scan(&stats.TotalClicks)
 	if err != nil {
 		return stats, err
 	}
@@ -336,8 +336,8 @@ func getStats() (Stats, error) {
 		return stats, err
 	}
 
-	// Get popular, recent, and most clicked links
-	rows, err := db.Query("SELECT short_url, long_url, visit_count, created_at FROM url_mapping ORDER BY created_at DESC")
+	// Get all links, ordered by visit count
+	rows, err := db.Query("SELECT short_url, long_url, visit_count, created_at FROM url_mapping ORDER BY visit_count DESC")
 	if err != nil {
 		return stats, err
 	}
@@ -351,7 +351,6 @@ func getStats() (Stats, error) {
 		if err != nil {
 			return stats, err
 		}
-		// Parse the created_at string into a time.Time object
 		link.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAtStr)
 		if err != nil {
 			return stats, fmt.Errorf("error parsing created_at time: %v", err)
@@ -359,18 +358,15 @@ func getStats() (Stats, error) {
 		allLinks = append(allLinks, link)
 	}
 
-	// Sort and slice for different categories
-	sort.Slice(allLinks, func(i, j int) bool {
-		return allLinks[i].VisitCount > allLinks[j].VisitCount
-	})
+	// Populate stats
 	stats.PopularLinks = allLinks[:min(10, len(allLinks))]
+	stats.MostClickedLinks = allLinks[:min(10, len(allLinks))]
 
+	// Sort by creation time for recent links
 	sort.Slice(allLinks, func(i, j int) bool {
 		return allLinks[i].CreatedAt.After(allLinks[j].CreatedAt)
 	})
 	stats.RecentLinks = allLinks[:min(10, len(allLinks))]
-
-	stats.MostClickedLinks = stats.PopularLinks // They are the same in this case
 
 	return stats, nil
 }
