@@ -19,7 +19,6 @@ import (
 )
 
 var db *sql.DB
-var visitCountCache = make(map[string]int)
 
 type Config struct {
 	Database struct {
@@ -86,13 +85,6 @@ func main() {
 		}
 		fmt.Printf("Database loaded with %d links.\n", count)
 	}
-
-	ticker := time.NewTicker(1 * time.Minute)
-	go func() {
-		for range ticker.C {
-			writeCacheToDB()
-		}
-	}()
 
 	http.HandleFunc(cfg.Routes.Index, handleIndex)
 	http.HandleFunc(cfg.Routes.Create, handleCreate)
@@ -245,23 +237,6 @@ func createShortURL(longURL string) (string, error) {
 			}
 			log.Println("Successfully saved short URL to DB:", shortURL)
 			return shortURL, nil
-		}
-	}
-}
-
-func writeCacheToDB() {
-	log.Println("Writing cache to DB")
-	for shortURL, count := range visitCountCache {
-		if count > 0 {
-			log.Printf("Updating visit count for short URL %s by %d", shortURL, count)
-
-			_, err := db.Exec(`UPDATE url_mapping SET visit_count = visit_count + ? WHERE short_url = ?`, count, shortURL)
-			if err != nil {
-				log.Printf("Failed to update visit count: %v", err)
-				continue
-			}
-
-			visitCountCache[shortURL] = 0
 		}
 	}
 }
