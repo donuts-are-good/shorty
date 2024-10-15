@@ -370,11 +370,11 @@ func TestHandleStats(t *testing.T) {
 	db = mockDB
 
 	mock.ExpectQuery("SELECT COUNT.*FROM url_mapping").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(10))
-	mock.ExpectQuery("SELECT SUM.*FROM url_mapping").WillReturnRows(sqlmock.NewRows([]string{"sum"}).AddRow(100))
-	mock.ExpectQuery("SELECT COALESCE.*FROM url_mapping").WillReturnRows(sqlmock.NewRows([]string{"sum"}).AddRow(5))
+	mock.ExpectQuery("SELECT COALESCE.*FROM url_mapping").WillReturnRows(sqlmock.NewRows([]string{"sum"}).AddRow(100))
+	mock.ExpectQuery("SELECT COALESCE.*FROM url_mapping WHERE DATE.*").WillReturnRows(sqlmock.NewRows([]string{"sum"}).AddRow(5))
 	mock.ExpectQuery("SELECT short_url, long_url, visit_count, created_at FROM url_mapping").
 		WillReturnRows(sqlmock.NewRows([]string{"short_url", "long_url", "visit_count", "created_at"}).
-			AddRow("abc123", "https://example.com", 50, time.Now()))
+			AddRow("abc123", "https://example.com", 50, time.Now().Format("2006-01-02 15:04:05")))
 
 	req, err := http.NewRequest("GET", "/stats", nil)
 	if err != nil {
@@ -405,12 +405,12 @@ func TestGetStats(t *testing.T) {
 	db = mockDB
 
 	mock.ExpectQuery("SELECT COUNT.*FROM url_mapping").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(10))
-	mock.ExpectQuery("SELECT SUM.*FROM url_mapping").WillReturnRows(sqlmock.NewRows([]string{"sum"}).AddRow(100))
-	mock.ExpectQuery("SELECT COALESCE.*FROM url_mapping").WillReturnRows(sqlmock.NewRows([]string{"sum"}).AddRow(5))
+	mock.ExpectQuery("SELECT COALESCE.*FROM url_mapping").WillReturnRows(sqlmock.NewRows([]string{"sum"}).AddRow(100))
+	mock.ExpectQuery("SELECT COALESCE.*FROM url_mapping WHERE DATE.*").WillReturnRows(sqlmock.NewRows([]string{"sum"}).AddRow(5))
 	mock.ExpectQuery("SELECT short_url, long_url, visit_count, created_at FROM url_mapping").
 		WillReturnRows(sqlmock.NewRows([]string{"short_url", "long_url", "visit_count", "created_at"}).
-			AddRow("abc123", "https://example.com", 50, time.Now()).
-			AddRow("def456", "https://example.org", 30, time.Now()))
+			AddRow("abc123", "https://example.com", 50, time.Now().Format("2006-01-02 15:04:05")).
+			AddRow("def456", "https://example.org", 30, time.Now().Format("2006-01-02 15:04:05")))
 
 	stats, err := getStats()
 	if err != nil {

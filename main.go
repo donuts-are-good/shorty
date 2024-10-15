@@ -252,9 +252,10 @@ func handleStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusOK) // Explicitly set 200 OK status
 	if err := tmpl.Execute(w, stats); err != nil {
 		log.Printf("Error executing stats template: %v", err)
-		http.Error(w, "Error rendering template", http.StatusInternalServerError)
+		// Don't write an error response here, as headers are already sent
 	}
 }
 
