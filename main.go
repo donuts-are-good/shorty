@@ -197,7 +197,7 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 
 	if shortURL == "" {
 		log.Println("Empty short URL, redirecting to root")
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Redirect(w, r, "/?error="+url.QueryEscape("Empty short URL"), http.StatusFound)
 		return
 	}
 
@@ -205,18 +205,17 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("No long URL found for short URL '%s'", shortURL)
+			http.Redirect(w, r, "/?error="+url.QueryEscape("Short URL not found"), http.StatusFound)
 		} else {
 			log.Printf("Error fetching long URL for short URL '%s': %v", shortURL, err)
+			http.Redirect(w, r, "/?error="+url.QueryEscape("Error fetching URL"), http.StatusFound)
 		}
-		log.Println("Redirecting to root due to error")
-		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
 	if longURL == "" {
 		log.Printf("Empty long URL for short URL '%s'", shortURL)
-		log.Println("Redirecting to root due to empty long URL")
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Redirect(w, r, "/?error="+url.QueryEscape("Invalid short URL"), http.StatusFound)
 		return
 	}
 
@@ -233,6 +232,7 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Redirecting to long URL: '%s'", longURL)
 	http.Redirect(w, r, longURL, http.StatusFound)
+	log.Printf("Redirect completed for short URL: '%s'", shortURL)
 }
 
 func handleStats(w http.ResponseWriter, r *http.Request) {
