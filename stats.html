@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Shortener Stats</title>
     <style>
-        body { font-family: monospace;}
+        body { font-family: monospace; }
         h1, h2 { color: #333; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; text-align: left; }
+        table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+        th, td { border: 1px solid #ddd; text-align: left; padding: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         th { background-color: #f2f2f2; }
+        .long-url { max-width: 300px; }
     </style>
 </head>
 <body>
@@ -30,10 +31,10 @@
         </tr>
         {{range .PopularLinks}}
         <tr>
-            <td>{{.ShortURL}}</td>
-            <td>{{.LongURL}}</td>
+            <td><a href="/r/{{.ShortURL}}">{{.ShortURL}}</a></td>
+            <td class="long-url"><a href="{{.LongURL}}" title="{{.LongURL}}">{{.LongURL}}</a></td>
             <td>{{.VisitCount}}</td>
-            <td>{{.CreatedAt}}</td>
+            <td>{{.FormattedCreatedAt}}</td>
         </tr>
         {{end}}
     </table>
@@ -48,10 +49,10 @@
         </tr>
         {{range .RecentLinks}}
         <tr>
-            <td>{{.ShortURL}}</td>
-            <td>{{.LongURL}}</td>
+            <td><a href="/r/{{.ShortURL}}">{{.ShortURL}}</a></td>
+            <td class="long-url"><a href="{{.LongURL}}" title="{{.LongURL}}">{{.LongURL}}</a></td>
             <td>{{.VisitCount}}</td>
-            <td>{{.CreatedAt}}</td>
+            <td>{{.FormattedCreatedAt}}</td>
         </tr>
         {{end}}
     </table>
@@ -66,12 +67,29 @@
         </tr>
         {{range .MostClickedLinks}}
         <tr>
-            <td>{{.ShortURL}}</td>
-            <td>{{.LongURL}}</td>
+            <td><a href="/r/{{.ShortURL}}">{{.ShortURL}}</a></td>
+            <td class="long-url"><a href="{{.LongURL}}" title="{{.LongURL}}">{{.LongURL}}</a></td>
             <td>{{.VisitCount}}</td>
-            <td>{{.CreatedAt}}</td>
+            <td>{{.FormattedCreatedAt}}</td>
         </tr>
         {{end}}
     </table>
+
+    <script>
+        function truncateUrl(url, maxLength) {
+            if (url.length <= maxLength) return url;
+            const half = Math.floor(maxLength / 2);
+            return url.substr(0, half) + '...' + url.substr(url.length - half);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const longUrls = document.querySelectorAll('.long-url a');
+            longUrls.forEach(function(element) {
+                const fullUrl = element.textContent;
+                element.textContent = truncateUrl(fullUrl, 40);
+                element.title = fullUrl; // Keep the full URL in the title attribute for hover
+            });
+        });
+    </script>
 </body>
 </html>
