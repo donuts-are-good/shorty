@@ -109,7 +109,15 @@ func main() {
 
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/create", handleCreate)
-	http.HandleFunc("/r/", handleRedirect)
+	http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
+		path := strings.TrimPrefix(r.URL.Path, "/r/")
+		if strings.HasSuffix(path, "/stats") {
+			shortURL := strings.TrimSuffix(path, "/stats")
+			handleLinkStats(w, r, shortURL)
+		} else {
+			handleRedirect(w, r)
+		}
+	})
 	http.HandleFunc("/stats", handleStats)
 
 	log.Fatal(http.ListenAndServe(cfg.Server.Port, nil))
@@ -377,4 +385,51 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// Add this new function to handle individual link stats
+func handleLinkStats(w http.ResponseWriter, r *http.Request, shortURL string) {
+	log.Printf("Handling stats request for short URL: %s", shortURL)
+
+	linkStats, err := getLinkStats(shortURL)
+	if err != nil {
+		log.Printf("Error fetching stats for short URL %s: %v", shortURL, err)
+		http.Error(w, "Error fetching link stats", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl, err := template.ParseFiles("link_stats.html")
+	if err != nil {
+		log.Printf("Error parsing link stats template: %v", err)
+		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, linkStats); err != nil {
+		log.Printf("Error executing link stats template: %v", err)
+		http.Error(w, "Error rendering template", http.StatusInternalServerError)
+	}
+}
+
+// Add this new function to fetch stats for a specific link
+func getLinkStats(shortURL string) (LinkStats, error) {
+	var stats LinkStats
+	var createdAtStr string
+
+	err := db.QueryRow(`
+		SELECT short_url, long_url, visit_count, created_at 
+		FROM url_mapping 
+		WHERE short_url = ?
+	`, shortURL).Scan(&stats.ShortURL, &stats.LongURL, &stats.VisitCount, &createdAtStr)
+
+	if err != nil {
+		return stats, err
+	}
+
+	stats.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAtStr)
+	if err != nil {
+		return stats, fmt.Errorf("error parsing created_at time: %v", err)
+	}
+
+	return stats, nil
 }
