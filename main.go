@@ -252,15 +252,17 @@ func createShortURL(longURL string) (string, error) {
 func writeCacheToDB() {
 	log.Println("Writing cache to DB")
 	for shortURL, count := range visitCountCache {
-		log.Printf("Updating visit count for short URL %s by %d", shortURL, count)
+		if count > 0 {
+			log.Printf("Updating visit count for short URL %s by %d", shortURL, count)
 
-		_, err := db.Exec(`UPDATE url_mapping SET visit_count = visit_count + ? WHERE short_url = ?`, count, shortURL)
-		if err != nil {
-			log.Printf("Failed to update visit count: %v", err)
-			continue
+			_, err := db.Exec(`UPDATE url_mapping SET visit_count = visit_count + ? WHERE short_url = ?`, count, shortURL)
+			if err != nil {
+				log.Printf("Failed to update visit count: %v", err)
+				continue
+			}
+
+			visitCountCache[shortURL] = 0
 		}
-
-		visitCountCache[shortURL] = 0
 	}
 }
 
