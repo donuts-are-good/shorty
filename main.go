@@ -87,11 +87,16 @@ func main() {
 
 		// Add the created_at column if it doesn't exist
 		if !columnExists {
-			_, err = db.Exec(`ALTER TABLE url_mapping ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP`)
+			_, err = db.Exec(`ALTER TABLE url_mapping ADD COLUMN created_at TEXT`)
 			if err != nil {
 				log.Fatalf("Failed to add created_at column: %v", err)
 			}
-			fmt.Println("Added created_at column to existing database.")
+			// Update existing rows with the current timestamp
+			_, err = db.Exec(`UPDATE url_mapping SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL`)
+			if err != nil {
+				log.Fatalf("Failed to update existing rows with timestamp: %v", err)
+			}
+			fmt.Println("Added created_at column to existing database and updated existing rows.")
 		}
 
 		var count int
@@ -246,7 +251,7 @@ func createShortURL(longURL string) (string, error) {
 			return "", err
 		}
 		if !exists {
-			_, err := db.Exec(`INSERT INTO url_mapping (short_url, long_url, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)`, shortURL, longURL)
+			_, err := db.Exec(`INSERT INTO url_mapping (short_url, long_url, created_at) VALUES (?, ?, datetime('now'))`, shortURL, longURL)
 			if err != nil {
 				log.Printf("Error inserting short URL %s into DB: %v", shortURL, err)
 				return "", err
